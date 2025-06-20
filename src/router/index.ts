@@ -51,6 +51,11 @@ const router = createRouter({
       name: 'chart',
       component: () => import('../views/Chart.vue')
     },
+    {
+      path: '/message',
+      name: 'message',
+      component: () => import('../views/MessageList.vue'),
+    },
   ]
 })
 
