@@ -1,5 +1,5 @@
 # 构建阶段
-FROM node:lts-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /app
 COPY . .
 RUN yarn && yarn build
