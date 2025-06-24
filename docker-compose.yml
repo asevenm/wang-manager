@@ -1,0 +1,9 @@
+version: '3.7'
+
+services:
+  cbes_admin:
+    image: wang-manager 
+    container_name: wang-manager
+    ports:
+      - 8000:80
+    restart: always
