@@ -6,7 +6,6 @@ RUN yarn && yarn build-only
 
 # 生产阶段
 FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/htmo
+COPY --from=build /app/dist /usr/share/nginx/html
 
-COPY dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
