@@ -2,7 +2,7 @@
 FROM node AS build
 WORKDIR /app
 COPY . .
-RUN yarn && yarn build
+RUN yarn && yarn build-only
 
 # 生产阶段
 FROM nginx:alpine
