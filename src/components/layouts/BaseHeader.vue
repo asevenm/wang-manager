@@ -11,8 +11,8 @@
     router
   >
     <el-menu-item index="home">首页</el-menu-item>
-    <el-menu-item index="product">仪器设备</el-menu-item>
-    <el-menu-item index="reagents">试剂耗材</el-menu-item>
+    <el-menu-item index="product">产品</el-menu-item>
+    <!-- <el-menu-item index="reagent">试剂耗材</el-menu-item> -->
     <el-menu-item index="agent">代理品牌</el-menu-item>
     <el-menu-item index="tech">技术材料</el-menu-item>
     <!-- <el-menu-item index="user">用户管理</el-menu-item> -->

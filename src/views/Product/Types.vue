@@ -36,6 +36,7 @@ import { ElMessage } from 'element-plus';
 
 export interface Tree {
   name: string
+  type: string
   children?: Tree[]
   id: number;
 }

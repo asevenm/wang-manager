@@ -16,13 +16,15 @@ defineExpose({ openDialog });
 
 const emit = defineEmits(['fetchTypes', 'close']);
 
-const form = reactive<{ name: string, child?: string, id?: number }>({
+const form = reactive<{ name: string, type: string; child?: string, id?: number }>({
   name: '',
+  type: '',
   child: '',
 });
 
 watch(() => props.typeInfo, (value) => {
   form.name = value?.name || '';
+  form.type = value?.type || '';
 });
 
 // const hasFirstLevel = computed(() => !!props.typeInfo?.name);
@@ -33,9 +35,9 @@ const title = computed(() => {
 });
 
 const handleConfirm = () => {
-  let params: { name: string; id?: number; parentId?: number } = { name: form.name, id: props.typeInfo?.id };
+  let params: { name: string; type: string; id?: number; parentId?: number } = { name: form.name, type: form.type, id: props.typeInfo?.id };
   if (props.addSub) {
-    params = { name: form.child, parentId: props.typeInfo?.id };
+    params = { name: form.child, type: form.type, parentId: props.typeInfo?.id };
   }
   createType(params).then((res) => {
     if (res) {
@@ -64,7 +66,7 @@ const onClose = () => {
 <template>
   <div>
     <el-button type="primary" @click="dialogFormVisible = true" style="margin-top: 16px">
-      新增类型
+      新增分类
     </el-button>
 
     <el-dialog
@@ -88,12 +90,26 @@ const onClose = () => {
           <el-input v-model="form.name" autocomplete="off" :disabled="props.addSub" />
         </el-form-item>
         <el-form-item
-          v-show="addSub"
-          label="子类型"
+          label="类型"
           :label-width="formLabelWidth"
           :rules="{
             required: true,
-            message: '子类型不能为空',
+            message: '类型不能为空',
+            trigger: 'blur',
+          }"
+        >
+          <el-select v-model="form.type" placeholder="请选择类型" :disabled="props.addSub">
+            <el-option label="仪器设备" value="1" />
+            <el-option label="试剂耗材" value="2" />
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          v-show="addSub"
+          label="子分类"
+          :label-width="formLabelWidth"
+          :rules="{
+            required: true,
+            message: '子分类不能为空',
             trigger: 'blur',
           }"
         >
