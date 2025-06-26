@@ -3,6 +3,6 @@
 
 <template>
   <div>
-    Home Page
+    后台管理系统
   </div>
 </template>

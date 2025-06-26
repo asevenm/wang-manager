@@ -29,13 +29,15 @@
     </el-form-item>
     <el-form-item label="图片" prop="images">
       <el-upload
-        v-model:file-list="ruleForm.images"
+        :file-list="ruleForm.images"
         class="upload-demo"
-        action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
+        action="/api/files/upload"
         :on-preview="handlePreview"
         :on-remove="handleRemove"
         :on-change="onImagesChange"
+        :on-success="handleUploadSuccess"
         list-type="picture"
+        accept="image/*"
       >
         <el-button type="primary">点击上传</el-button>
         <template #tip>
@@ -68,13 +70,15 @@
             <el-col>
               <el-form-item label="图片" prop="'features.' + index + '.images'">
                 <el-upload
-                  v-model:file-list="item.images"
+                  :file-list="item.images"
                   class="upload-demo"
-                  action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
+                  action="/api/files/upload"
                   :on-preview="handlePreview"
                   :on-remove="handleRemove"
                   :on-change="onImagesChange"
+                  :on-success="handleFeatureUploadSuccess"
                   list-type="picture"
+                  accept="image/*"
                 >
                   <el-button type="primary">点击上传</el-button>
                   <template #tip>
@@ -278,6 +282,30 @@ const addParam = (item: Model) => {
 
 const removeParam = (list: Param[], i: number) => {
   list.splice(i, 1);
+}
+
+const handleUploadSuccess = (response, file, fileList) => {
+  if (response && response.data) {
+    const img = {
+      name: response.data.originalname,
+      url: response.data.url
+    };
+    ruleForm.images.push(img);
+  }
+}
+
+const handleFeatureUploadSuccess = (response, file, fileList) => {
+  if (response && response.data) {
+    const img = {
+      name: response.data.originalname,
+      url: response.data.url
+    };
+    ruleForm.features.forEach(item => {
+      if (item.images) {
+        item.images.push(img);
+      }
+    });
+  }
 }
 
 const submitForm = async (formEl: FormInstance | undefined) => {

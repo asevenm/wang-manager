@@ -11,6 +11,17 @@
         <el-form-item label="电话" prop="phone">
           <el-input v-model="searchForm.phone" placeholder="请输入电话" clearable />
         </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-select 
+            v-model="searchForm.status" 
+            placeholder="请选择状态" 
+            clearable
+            style="width: 120px"
+          >
+            <el-option label="未读" value="0" />
+            <el-option label="已读" value="1" />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="resetSearch">重置</el-button>
@@ -29,7 +40,11 @@
       <el-table-column prop="email" label="邮箱" width="180" />
       <el-table-column prop="phone" label="电话" width="150" />
       <el-table-column prop="content" label="留言内容" show-overflow-tooltip />
-      <el-table-column prop="createTime" label="提交时间" width="180" />
+      <el-table-column label="提交时间">
+        <template #default="scope">
+          <time>{{ formatDate(scope.row.createAt) }}</time>
+        </template>
+      </el-table-column>
       <el-table-column prop="status" label="状态" width="100">
         <template #default="scope">
           <el-tag :type="scope.row.status === 0 ? 'warning' : 'success'">
@@ -37,12 +52,17 @@
           </el-tag>
         </template>
       </el-table-column>
+      <el-table-column label="操作" width="100">
+        <template #default="scope">
+          <el-button type="primary" @click="handleRead(scope.row)">已读</el-button>
+        </template>
+      </el-table-column>
     </el-table>
 
     <div class="pagination-container">
       <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
+        :current-page="currentPage"
+        :page-size="pageSize"
         :page-sizes="[10, 20, 50, 100]"
         layout="total, sizes, prev, pager, next, jumper"
         :total="total"
@@ -56,6 +76,8 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { getMessageList, markAsRead } from '../service/message'
+import { formatDate } from '../utils';
 
 // 搜索表单
 const searchForm = reactive({
@@ -73,44 +95,21 @@ const pageSize = ref(10)
 const total = ref(0)
 
 // 获取留言列表数据
-const getMessageList = async () => {
+const fetchMessageList = async () => {
   loading.value = true
   try {
-    // 这里替换为实际的API调用
-    // const res = await api.getMessageList({
-    //   ...searchForm,
-    //   pageNum: currentPage.value,
-    //   pageSize: pageSize.value
-    // })
-    
-    // 模拟数据
-    setTimeout(() => {
-      tableData.value = [
-        {
-          id: 1,
-          name: '张三',
-          email: 'zhangsan@example.com',
-          phone: '13800138000',
-          content: '我对贵公司的产品很感兴趣，请联系我详细了解。',
-          createTime: '2023-05-15 14:30:22',
-          status: 0
-        },
-        {
-          id: 2,
-          name: '李四',
-          email: 'lisi@example.com',
-          phone: '13900139000',
-          content: '请问你们的产品有什么优惠活动吗？',
-          createTime: '2023-05-16 09:45:10',
-          status: 1
-        }
-      ]
-      total.value = 2
-      loading.value = false
-    }, 500)
+    const res = await getMessageList({
+      ...searchForm,
+      pageNum: currentPage.value,
+      pageSize: pageSize.value
+    })
+    if (res) {
+      tableData.value = res.items || []
+      total.value = res.total || 0
+    }
   } catch (error) {
-    console.error('获取留言列表失败', error)
     ElMessage.error('获取留言列表失败')
+  } finally {
     loading.value = false
   }
 }
@@ -118,29 +117,40 @@ const getMessageList = async () => {
 // 搜索
 const handleSearch = () => {
   currentPage.value = 1
-  getMessageList()
+  fetchMessageList()
 }
 
 // 重置搜索
 const resetSearch = () => {
   searchFormRef.value.resetFields()
   currentPage.value = 1
-  getMessageList()
+  fetchMessageList()
 }
 
 // 分页处理
 const handleSizeChange = (val) => {
   pageSize.value = val
-  getMessageList()
+  fetchMessageList()
 }
 
 const handleCurrentChange = (val) => {
   currentPage.value = val
-  getMessageList()
+  fetchMessageList()
+}
+
+// 已读操作
+const handleRead = async (row) => {
+  try {
+    await markAsRead(row.id)
+    ElMessage.success('已标记为已读')
+    fetchMessageList()
+  } catch (error) {
+    ElMessage.error('操作失败')
+  }
 }
 
 onMounted(() => {
-  getMessageList()
+  fetchMessageList()
 })
 </script>
 

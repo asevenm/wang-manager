@@ -10,7 +10,7 @@
       size="740"
       :beforeClose="handleBeforeClose"
     >
-      <Form :types="props.types" :onSuccess="onSuccess" />
+      <Form :types="props.types" :onSuccess="onSuccess" :initValue="props.detail" />
     </el-drawer>
   </div>
 </template>

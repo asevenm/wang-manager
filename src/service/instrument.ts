@@ -23,6 +23,17 @@ export const addOrUpdateInrtrument = async (instrument: any) => {
   return false;
 }
 
+export const getInstrumentDetail = async (id: number) => {
+  const res = await axios.get('/instrument/detail/' + id);
+  const { data } = res;
+  const { status, message, data: instrument } = data;
+  if (status === 0) {
+    return instrument;
+  }
+  ElMessage(message)
+  return null;
+}
+
 export const deleteInstrument = async (id: number) => {
   const res = await axios.get('/instrument/delete/' + id);
   const { data } = res;
