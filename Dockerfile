@@ -3,6 +3,8 @@ FROM node AS build
 
 RUN npm config set registry https://registry.npmmirror.com
 
+RUN yarn config set registry https://registry.npmmirror.com
+
 WORKDIR /app
 COPY . .
 RUN yarn && yarn build-only
