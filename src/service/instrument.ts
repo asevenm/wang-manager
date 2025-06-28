@@ -35,7 +35,7 @@ export const getInstrumentDetail = async (id: number) => {
 }
 
 export const deleteInstrument = async (id: number) => {
-  const res = await axios.get('/instrument/delete/' + id);
+  const res = await axios.delete('/instrument/' + id);
   const { data } = res;
   if (data.status === 0) {
     return true;
