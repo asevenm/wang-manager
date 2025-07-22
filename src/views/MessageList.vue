@@ -54,7 +54,13 @@
       </el-table-column>
       <el-table-column label="操作" width="100">
         <template #default="scope">
-          <el-button type="primary" @click="handleRead(scope.row)">已读</el-button>
+          <el-button 
+            v-if="scope.row.status === 0" 
+            type="primary" 
+            @click="handleRead(scope.row)"
+          >
+            已读
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
