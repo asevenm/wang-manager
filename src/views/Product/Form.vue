@@ -1,7 +1,6 @@
 <template>
   <el-form
     ref="ruleFormRef"
-    style="max-width: 600px"
     :model="ruleForm"
     :rules="rules"
     label-width="auto"
@@ -144,11 +143,11 @@
           </el-col>
         </el-row>
       </div>
-          <el-button class="mt-2" @click.prevent="addParam(item)" type="primary">
+          <el-button style="margin-top: 16px;" @click.prevent="addParam(item)" type="primary">
             新增参数
           </el-button>
       </div>
-      <el-button class="mt-2" @click.prevent="addModel()" type="primary">
+      <el-button style="margin-top: 16px;" @click.prevent="addModel()" type="primary">
         新增型号
       </el-button>
     </div>
@@ -163,7 +162,7 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref, inject, Ref, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import type { ComponentSize, FormInstance, FormRules, UploadProps } from 'element-plus'
 import { addOrUpdateInrtrument } from '../../service/instrument';
 import type { Tree } from './Types.vue';
@@ -172,7 +171,6 @@ import { RuleForm, Model, Param } from './type';
 
 const props = defineProps<{ initValue: RuleForm & { id?: number }, types: Tree[], onSuccess: () => void }>();
 
-const editRow = inject<Ref<RuleForm>>('editRow');
 const formSize = ref<ComponentSize>('default')
 const ruleFormRef = ref<FormInstance>()
 const ruleForm = reactive<RuleForm>({
@@ -182,29 +180,14 @@ const ruleForm = reactive<RuleForm>({
   desc: '',
   features: [],
   models: [],
-  // images: [
-  //   {
-  //     name: 'food.jpeg',
-  //     url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100',
-  //   },
-  //   {
-  //     name: 'food2.jpeg',
-  //     url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100',
-  //   },
-  // ]
   images: [],
 });
-watch(editRow, (newValue) => {
-  Object.assign(ruleForm, newValue ?? {
-    name: '',
-    region: '',
-    typeId: '',
-    desc: '',
-    features: [],
-    models: [],
-    images: [],
-  });
-}, { immediate: true });
+
+watch(() => props.initValue, (newValue) => {
+  if (newValue) {
+    Object.assign(ruleForm, newValue);
+  }
+}, { immediate: true, deep: true });
 
 
 const rules = reactive<FormRules<RuleForm>>({
@@ -345,11 +328,15 @@ const defaultProps = {
     position: fixed;
     bottom: 0;
     background: #fff;
-    width: 740px;
+    width: 100%;
     right: 0;
     margin-bottom: 0;
     padding: 16px;
     box-sizing: border-box;
+  }
+  .fixed-bottom .el-form-item__content {
+    display: flex;
+    justify-content: center;
   }
   .el-drawer__body {
     padding-bottom: 100px;

@@ -1,8 +1,7 @@
 <script lang="ts" setup>
-import { reactive, ref, onBeforeMount, provide } from 'vue';
-import type { Ref } from 'vue';
+import { reactive, ref, onBeforeMount } from 'vue';
 import { ElMessage } from 'element-plus';
-import Add from './Add.vue';
+import { useRouter } from 'vue-router';
 import Types from './Types.vue';
 import { getList, deleteInstrument, getTypes } from '../../service/instrument';
 import type { Instrument } from './type';
@@ -28,19 +27,13 @@ const page = ref({
 
 const typeTree = ref([]);
 
-const mode = ref('create');
+const router = useRouter();
 
 const fetchTypes = () => {
   getTypes().then((res) => {
     typeTree.value = res;
   });
 }
-
-// fetchTypes();
-
-const editRow = ref();
-
-const addRef = ref(null);
 
 const fetchData = () => {
   getList({ ...searchData, page: page.value }).then((res) => {
@@ -65,9 +58,7 @@ const handleCurrentChange = (curr: number) => {
 }
 
 const handleEdit = (row: Instrument) => {
-  editRow.value = { ...row, typeId: row.type.id };
-  mode.value = 'edit';
-  addRef.value.open();
+  router.push(`/product/edit/${row.id}`);
 }
 
 const handleDelete = (id: number) => {
@@ -79,23 +70,9 @@ const handleDelete = (id: number) => {
   })
 }
 
-const onSuccess = () => {
-  fetchData();
-  mode.value = 'create';
-  editRow.value = undefined;
-}
-
 const handleClick = () => {
-  mode.value = 'create';
-  addRef.value.open();  
+  router.push('/product/add');
 }
-
-const onCancel = () => {
-  mode.value = 'create';
-  editRow.value = undefined;
-}
-
-provide<Ref<Instrument>>('editRow', editRow);
 </script>
 
 <template>
@@ -173,14 +150,6 @@ provide<Ref<Instrument>>('editRow', editRow);
         :total="tableData.total"
         @current-change="handleCurrentChange"
         class="pagination"
-      />
-      <Add
-        :type="mode"
-        :detail="editRow"
-        :onSuccess="onSuccess"
-        :types="typeTree"
-        ref="addRef"
-        :onCancel="onCancel"
       />
     </div>
   </div>

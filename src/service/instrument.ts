@@ -24,7 +24,7 @@ export const addOrUpdateInrtrument = async (instrument: any) => {
 }
 
 export const getInstrumentDetail = async (id: number) => {
-  const res = await axios.get('/instrument/detail/' + id);
+  const res = await axios.get('/instrument/' + id);
   const { data } = res;
   const { status, message, data: instrument } = data;
   if (status === 0) {

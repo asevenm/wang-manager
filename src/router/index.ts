@@ -19,6 +19,16 @@ const router = createRouter({
       component: () => import('../views/Product/index.vue')
     },
     {
+      path: '/product/add',
+      name: 'product-add',
+      component: () => import('../views/Product/Add.vue')
+    },
+    {
+      path: '/product/edit/:id',
+      name: 'product-edit',
+      component: () => import('../views/Product/Edit.vue')
+    },
+    {
       path: '/agent',
       name: 'agent',
       component: () => import('../views/Agent.vue')
@@ -55,6 +65,11 @@ const router = createRouter({
       path: '/message',
       name: 'message',
       component: () => import('../views/MessageList.vue'),
+    },
+    {
+      path: '/services',
+      name: 'services',
+      component: () => import('../views/Services.vue'),
     },
   ]
 })

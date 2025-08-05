@@ -4,7 +4,7 @@ import { RouterView } from 'vue-router'
 
 <template>
   <el-config-provider>
-    <header>
+    <header class="sticky-header">
       <BaseHeader />
     </header>
     <main class="flex main-container">
@@ -16,6 +16,14 @@ import { RouterView } from 'vue-router'
 <style>
 #app {
   color: var(--ep-text-color-primary);
+}
+
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .main-container {
