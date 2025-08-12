@@ -71,6 +71,31 @@ const router = createRouter({
       name: 'services',
       component: () => import('../views/Services.vue'),
     },
+    {
+      path: '/services/categories/add',
+      name: 'service-category-add',
+      component: () => import('../views/ServiceCategoryEdit.vue')
+    },
+    {
+      path: '/services/categories/edit/:id',
+      name: 'service-category-edit',
+      component: () => import('../views/ServiceCategoryEdit.vue')
+    },
+    {
+      path: '/services/add',
+      name: 'service-add',
+      component: () => import('../views/ServiceEdit.vue')
+    },
+    {
+      path: '/services/edit/:id',
+      name: 'service-edit',
+      component: () => import('../views/ServiceEdit.vue')
+    },
+    {
+      path: '/company',
+      name: 'company',
+      component: () => import('../views/Company.vue'),
+    },
   ]
 })
 

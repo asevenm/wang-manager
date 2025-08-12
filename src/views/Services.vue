@@ -2,112 +2,127 @@
   <div class="services-management">
     <div class="header">
       <h1>服务管理</h1>
-      <button @click="showAddModal = true" class="add-button">添加服务</button>
+      <button @click="addCategory" class="add-button">添加服务类别</button>
     </div>
 
-    <div class="services-list">
-      <div v-for="service in services" :key="service.id" class="service-card">
-        <div class="service-header">
-          <h3>{{ service.title }}</h3>
-          <div class="actions">
-            <button @click="editService(service)" class="edit-btn">编辑</button>
-            <button @click="deleteService(service.id!)" class="delete-btn">删除</button>
+    <div class="categories-list">
+      <div v-for="category in categories" :key="category.id" class="category-card">
+        <div class="category-header">
+          <div class="category-info">
+            <h2>{{ category.name }}</h2>
+            <p class="category-description">{{ category.description }}</p>
+          </div>
+          <div class="category-actions">
+            <button @click="editCategory(category)" class="edit-btn">编辑类别</button>
+            <button @click="addService(category.id!)" class="add-service-btn">添加服务</button>
+            <button @click="deleteCategory(category.id!)" class="delete-btn">删除类别</button>
           </div>
         </div>
-        <p class="description">{{ service.description }}</p>
-        <div class="features">
-          <h4>服务内容:</h4>
-          <ul>
-            <li v-for="(feature, index) in service.features" :key="index">{{ feature }}</li>
-          </ul>
-        </div>
-        <div class="meta">
-          <span class="order">排序: {{ service.sort_order }}</span>
-          <span :class="['status', service.is_active ? 'active' : 'inactive']">
-            {{ service.is_active ? '启用' : '禁用' }}
-          </span>
+        
+        <div class="services-grid">
+          <div 
+            v-for="service in getServicesByCategory(category.id!)" 
+            :key="service.id" 
+            class="service-item"
+          >
+            <div class="service-preview">
+              <img 
+                v-if="service.images && service.images.length > 0" 
+                :src="service.images[0].url" 
+                :alt="service.name"
+                class="service-image"
+              />
+              <div v-else class="service-placeholder">
+                <span>暂无图片</span>
+              </div>
+            </div>
+            <div class="service-content">
+              <h3>{{ service.name }}</h3>
+              <p class="service-description">{{ service.description }}</p>
+              <div class="service-actions">
+                <button @click="editService(service)" class="edit-service-btn">编辑</button>
+                <button @click="deleteService(service.id!)" class="delete-service-btn">删除</button>
+              </div>
+            </div>
+          </div>
+          <div class="add-service-card" @click="addService(category.id!)">
+            <span class="add-icon">+</span>
+            <span>添加服务</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Add/Edit Modal -->
-    <div v-if="showAddModal || showEditModal" class="modal-overlay">
-      <div class="modal">
-        <div class="modal-header">
-          <h2>{{ showAddModal ? '添加服务' : '编辑服务' }}</h2>
-          <button @click="closeModal" class="close-btn">×</button>
-        </div>
-        <form @submit.prevent="saveService" class="modal-form">
-          <div class="form-group">
-            <label>服务标题:</label>
-            <input v-model="currentService.title" type="text" required />
-          </div>
-          <div class="form-group">
-            <label>服务描述:</label>
-            <textarea v-model="currentService.description" required></textarea>
-          </div>
-          <div class="form-group">
-            <label>服务内容 (每行一项):</label>
-            <textarea 
-              v-model="featuresText" 
-              placeholder="每行输入一个服务内容"
-              rows="8"
-            ></textarea>
-          </div>
-          <div class="form-group">
-            <label>排序:</label>
-            <input v-model.number="currentService.sort_order" type="number" />
-          </div>
-          <div class="form-group">
-            <label>
-              <input v-model="currentService.is_active" type="checkbox" />
-              启用此服务
-            </label>
-          </div>
-          <div class="form-actions">
-            <button type="button" @click="closeModal" class="cancel-btn">取消</button>
-            <button type="submit" class="save-btn">保存</button>
-          </div>
-        </form>
-      </div>
+    <!-- 如果没有类别 -->
+    <div v-if="categories.length === 0" class="empty-state">
+      <h3>暂无服务类别</h3>
+      <p>请先添加服务类别，然后在类别下添加具体服务。</p>
+      <button @click="addCategory" class="add-button">添加首个类别</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { serviceApi, type ServiceItem } from '@/service/service'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { serviceCategoryApi, serviceApi, type ServiceCategory, type ServiceItem } from '@/service/service'
 
+const router = useRouter()
+
+const categories = ref<ServiceCategory[]>([])
 const services = ref<ServiceItem[]>([])
-const showAddModal = ref(false)
-const showEditModal = ref(false)
-const currentService = reactive<ServiceItem>({
-  title: '',
-  description: '',
-  features: [],
-  sort_order: 0,
-  is_active: true
-})
 
-const featuresText = computed({
-  get: () => currentService.features.join('\n'),
-  set: (value: string) => {
-    currentService.features = value.split('\n').filter(f => f.trim())
-  }
-})
-
-const loadServices = async () => {
+const loadCategories = async () => {
   try {
-    const { data } = await serviceApi.getAll()
-    services.value = data || []
+    const response = await serviceCategoryApi.getAll()
+    categories.value = response.data
   } catch (error) {
-    console.error('Failed to load services:', error)
+    console.error('Failed to load categories:', error)
+    categories.value = []
   }
 }
 
+const loadServices = async () => {
+  try {
+    const response = await serviceApi.getAll()
+    services.value = response.data
+  } catch (error) {
+    console.error('Failed to load services:', error)
+    services.value = []
+  }
+}
+
+const getServicesByCategory = (categoryId: number) => {
+  return services.value.filter(service => service.category_id === categoryId)
+}
+
+const addCategory = () => {
+  router.push('/services/categories/add')
+}
+
+const editCategory = (category: ServiceCategory) => {
+  router.push(`/services/categories/edit/${category.id}`)
+}
+
+const deleteCategory = async (id: number) => {
+  if (!confirm('确定要删除这个服务类别吗？删除后该类别下的所有服务也将被删除。')) return
+  
+  try {
+    await serviceCategoryApi.delete(id)
+    await Promise.all([loadCategories(), loadServices()])
+    alert('删除成功')
+  } catch (error) {
+    console.error('Failed to delete category:', error)
+    alert('删除失败')
+  }
+}
+
+const addService = (categoryId: number) => {
+  router.push(`/services/add?category=${categoryId}`)
+}
+
 const editService = (service: ServiceItem) => {
-  Object.assign(currentService, service)
-  showEditModal.value = true
+  router.push(`/services/edit/${service.id}`)
 }
 
 const deleteService = async (id: number) => {
@@ -116,41 +131,15 @@ const deleteService = async (id: number) => {
   try {
     await serviceApi.delete(id)
     await loadServices()
+    alert('删除成功')
   } catch (error) {
     console.error('Failed to delete service:', error)
     alert('删除失败')
   }
 }
 
-const saveService = async () => {
-  try {
-    if (showAddModal.value) {
-      await serviceApi.create(currentService)
-    } else {
-      await serviceApi.update(currentService.id!, currentService)
-    }
-    await loadServices()
-    closeModal()
-  } catch (error) {
-    console.error('Failed to save service:', error)
-    alert('保存失败')
-  }
-}
-
-const closeModal = () => {
-  showAddModal.value = false
-  showEditModal.value = false
-  Object.assign(currentService, {
-    title: '',
-    description: '',
-    features: [],
-    sort_order: 0,
-    is_active: true
-  })
-}
-
-onMounted(() => {
-  loadServices()
+onMounted(async () => {
+  await Promise.all([loadCategories(), loadServices()])
 })
 </script>
 
@@ -163,180 +152,238 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e8e8e8;
+}
+
+.header h1 {
+  margin: 0;
+  color: #1a1a1a;
 }
 
 .add-button {
   background: #1890ff;
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 10px 20px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
 }
 
-.services-list {
-  display: grid;
-  gap: 20px;
+.add-button:hover {
+  background: #40a9ff;
 }
 
-.service-card {
-  border: 1px solid #d9d9d9;
-  border-radius: 8px;
-  padding: 20px;
+.categories-list {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.category-card {
   background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
 }
 
-.service-header {
+.category-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f5f5f5;
 }
 
-.actions {
+.category-info h2 {
+  margin: 0 0 8px 0;
+  color: #1a1a1a;
+  font-size: 20px;
+}
+
+.category-description {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.category-actions {
   display: flex;
   gap: 8px;
+}
+
+.edit-btn,
+.add-service-btn,
+.delete-btn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
 }
 
 .edit-btn {
   background: #52c41a;
   color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
+}
+
+.edit-btn:hover {
+  background: #73d13d;
+}
+
+.add-service-btn {
+  background: #1890ff;
+  color: white;
+}
+
+.add-service-btn:hover {
+  background: #40a9ff;
 }
 
 .delete-btn {
   background: #ff4d4f;
   color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
 }
 
-.description {
-  margin-bottom: 15px;
-  color: #666;
+.delete-btn:hover {
+  background: #ff7875;
 }
 
-.features {
-  margin-bottom: 15px;
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 
-.features h4 {
-  margin-bottom: 8px;
+.service-item {
+  background: #fafafa;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e8e8e8;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.features ul {
-  margin: 0;
-  padding-left: 20px;
+.service-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 14px;
-  color: #666;
-}
-
-.status.active {
-  color: #52c41a;
-}
-
-.status.inactive {
-  color: #ff4d4f;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+.service-preview {
+  height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-}
-
-.modal {
-  background: white;
-  border-radius: 8px;
-  width: 600px;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-}
-
-.modal-form {
-  padding: 20px;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 4px;
-  font-weight: 500;
-}
-
-.form-group input,
-.form-group textarea {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  box-sizing: border-box;
-}
-
-.form-group textarea {
-  resize: vertical;
-  min-height: 60px;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 20px;
-}
-
-.cancel-btn {
   background: #f5f5f5;
-  color: #666;
-  border: 1px solid #d9d9d9;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
 }
 
-.save-btn {
-  background: #1890ff;
-  color: white;
-  border: none;
-  padding: 8px 16px;
+.service-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.service-placeholder {
+  color: #999;
+  font-size: 14px;
+}
+
+.service-content {
+  padding: 16px;
+}
+
+.service-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #1a1a1a;
+}
+
+.service-description {
+  margin: 0 0 12px 0;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.service-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-service-btn,
+.delete-service-btn {
+  flex: 1;
+  padding: 6px;
   border-radius: 4px;
+  border: none;
   cursor: pointer;
+  font-size: 12px;
+}
+
+.edit-service-btn {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
+.edit-service-btn:hover {
+  background: #bae7ff;
+}
+
+.delete-service-btn {
+  background: #fff1f0;
+  color: #ff4d4f;
+}
+
+.delete-service-btn:hover {
+  background: #ffccc7;
+}
+
+.add-service-card {
+  background: #f9f9f9;
+  border: 2px dashed #d9d9d9;
+  border-radius: 8px;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #999;
+  transition: all 0.2s;
+}
+
+.add-service-card:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+  background: #f6ffed;
+}
+
+.add-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.empty-state h3 {
+  margin: 0 0 12px 0;
+  color: #1a1a1a;
+}
+
+.empty-state p {
+  margin: 0 0 24px 0;
 }
 </style>

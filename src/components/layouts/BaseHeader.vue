@@ -19,5 +19,7 @@
     <!-- <el-menu-item index="bill">订单管理</el-menu-item> -->
     <!-- <el-menu-item index="chart">数据报表</el-menu-item> -->
     <el-menu-item index="message">客户留言</el-menu-item>
+    <el-menu-item index="services">服务项目</el-menu-item>
+    <el-menu-item index="company">公司信息</el-menu-item>
   </el-menu>
 </template>
