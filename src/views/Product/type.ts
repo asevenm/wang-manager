@@ -27,6 +27,8 @@ export interface RuleForm {
   desc: string
   region: string
   typeId: string
+  workingPrinciple?: string
+  applicationScenes: string[]
   features: Feature[],
   models: Model[]
   images: Picture[]

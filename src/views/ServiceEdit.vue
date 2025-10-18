@@ -5,6 +5,16 @@
       <h1>{{ isEdit ? '编辑服务' : '添加服务' }}</h1>
     </div>
 
+    <!-- 调试信息 -->
+    <div v-if="false" class="debug-info" style="background: #f0f0f0; padding: 10px; margin: 10px 0; font-size: 12px;">
+      <p>Debug Info:</p>
+      <p>isEdit: {{ isEdit }}</p>
+      <p>route.params.id: {{ route.params.id }}</p>
+      <p>currentService.name: {{ currentService.name }}</p>
+      <p>currentService.category_id: {{ currentService.category_id }}</p>
+      <p>categories.length: {{ categories.length }}</p>
+    </div>
+
     <div class="edit-form">
       <form @submit.prevent="saveService">
         <div class="form-section">
@@ -65,15 +75,20 @@
                 </div>
               </div>
               <div class="image-controls">
-                <input 
-                  type="file" 
-                  @change="handleImageUpload($event, index)"
+                <el-upload
+                  class="upload-demo"
+                  action="/api/files/upload"
+                  :show-file-list="false"
                   accept="image/*"
-                  class="file-input"
-                  :id="`image-${index}`"
-                />
-                <label :for="`image-${index}`" class="upload-btn">选择图片</label>
-                <button type="button" @click="removeImage(index)" class="remove-btn">删除</button>
+                  :on-success="(res) => handleImageUploadSuccess(res, index)"
+                >
+                  <el-button type="primary">点击上传</el-button>
+                  <template #tip>
+                    <div class="el-upload__tip">
+                      jpg/png files with a size less than 500kb
+                    </div>
+                  </template>
+                </el-upload>
               </div>
               <div class="form-group">
                 <label>图片说明:</label>
@@ -102,7 +117,8 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { serviceCategoryApi, serviceApi, type ServiceCategory, type ServiceItem, type ServiceImage } from '@/service/service'
+import { serviceCategoryApi, serviceApi, type ServiceCategory, type ServiceItem, type ServiceImage } from '../service/service'
+import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
@@ -112,6 +128,7 @@ const isEdit = computed(() => !!route.params.id)
 const categories = ref<ServiceCategory[]>([])
 
 const currentService = reactive<ServiceItem>({
+  id: undefined,
   name: '',
   description: '',
   detailed_description: '',
@@ -139,16 +156,36 @@ const loadService = async () => {
   if (isEdit.value) {
     try {
       const id = Number(route.params.id)
-      const response = await serviceApi.getOne(id)
-      Object.assign(currentService, response.data)
-      
-      // 确保images数组存在
-      if (!currentService.images) {
-        currentService.images = []
+      if (!id || isNaN(id)) {
+        ElMessage.error('无效的服务ID')
+        return
       }
+      
+      console.log('Loading service with ID:', id)
+      const response = await serviceApi.getOne(id)
+      console.log('API response:', response)
+      
+      const serviceData = response.data
+      if (!serviceData) {
+        ElMessage.error('未找到服务数据')
+        return
+      }
+      
+      // 逐个属性赋值以保持响应式
+      currentService.id = serviceData.id
+      currentService.name = serviceData.name || ''
+      currentService.description = serviceData.description || ''
+      currentService.detailed_description = serviceData.detailed_description || ''
+      currentService.category_id = Number(serviceData.category_id) || 0
+      currentService.sort_order = Number(serviceData.sort_order) || 0
+      currentService.is_active = serviceData.is_active !== false
+      currentService.images = Array.isArray(serviceData.images) ? serviceData.images : []
+      
+      console.log('Successfully loaded service data:', serviceData)
+      console.log('Current service after assignment:', currentService)
     } catch (error) {
       console.error('Failed to load service:', error)
-      alert('加载服务失败')
+      ElMessage.error('加载服务失败: ' + (error as Error).message)
     }
   }
 }
@@ -160,23 +197,23 @@ const addImage = () => {
   })
 }
 
-const removeImage = (index: number) => {
-  currentService.images!.splice(index, 1)
-}
-
-const handleImageUpload = (event: Event, index: number) => {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-  
-  if (file) {
-    // 创建预览URL
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      currentService.images![index].url = e.target?.result as string
+const handleImageUploadSuccess = (response: any, index: number) => {
+  try {
+    const uploadedUrl = response?.url || response?.data?.url
+    if (uploadedUrl) {
+      currentService.images![index].url = uploadedUrl
+      ElMessage.success('图片上传成功')
+    } else {
+      console.warn('Upload response missing url:', response)
+      ElMessage.error('上传失败：未返回URL')
     }
-    reader.readAsDataURL(file)
+  } catch (err) {
+    console.error('Failed to handle upload success:', err)
+    ElMessage.error('处理上传结果失败')
   }
 }
+
+// 删除图片（如需使用，可在模板中添加按钮触发）
 
 const saveService = async () => {
   try {
@@ -197,11 +234,11 @@ const saveService = async () => {
       await serviceApi.create(serviceData)
     }
     
-    alert('保存成功')
+    ElMessage.success('保存成功')
     goBack()
   } catch (error) {
     console.error('Failed to save service:', error)
-    alert('保存失败')
+    ElMessage.error('保存失败')
   } finally {
     saving.value = false
   }
@@ -212,7 +249,12 @@ const goBack = () => {
 }
 
 onMounted(async () => {
+  console.log('ServiceEdit mounted, route params:', route.params)
+  console.log('Is edit mode:', isEdit.value)
+  
   await Promise.all([loadCategories(), loadService()])
+  
+  console.log('After loading, currentService:', JSON.stringify(currentService, null, 2))
 })
 </script>
 

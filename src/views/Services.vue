@@ -66,6 +66,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { serviceCategoryApi, serviceApi, type ServiceCategory, type ServiceItem } from '@/service/service'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
 
@@ -75,6 +76,7 @@ const services = ref<ServiceItem[]>([])
 const loadCategories = async () => {
   try {
     const response = await serviceCategoryApi.getAll()
+    console.log(response.data)
     categories.value = response.data
   } catch (error) {
     console.error('Failed to load categories:', error)
@@ -85,7 +87,7 @@ const loadCategories = async () => {
 const loadServices = async () => {
   try {
     const response = await serviceApi.getAll()
-    services.value = response.data
+    services.value = response.data.data || []
   } catch (error) {
     console.error('Failed to load services:', error)
     services.value = []
@@ -110,10 +112,10 @@ const deleteCategory = async (id: number) => {
   try {
     await serviceCategoryApi.delete(id)
     await Promise.all([loadCategories(), loadServices()])
-    alert('删除成功')
+    ElMessage.success('删除成功')
   } catch (error) {
     console.error('Failed to delete category:', error)
-    alert('删除失败')
+    ElMessage.error('删除失败')
   }
 }
 
@@ -126,15 +128,15 @@ const editService = (service: ServiceItem) => {
 }
 
 const deleteService = async (id: number) => {
-  if (!confirm('确定要删除这个服务吗？')) return
-  
+  if (!ElMessageBox.confirm('确定要删除这个服务吗？')) return
+    
   try {
     await serviceApi.delete(id)
     await loadServices()
-    alert('删除成功')
+    ElMessage.success('删除成功')
   } catch (error) {
     console.error('Failed to delete service:', error)
-    alert('删除失败')
+    ElMessage.error('删除失败')
   }
 }
 

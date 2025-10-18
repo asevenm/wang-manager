@@ -9,13 +9,13 @@ interface FetchParams {
   method?: 'get' | 'post' | 'put' | 'patch' | 'delete';
 }
 
-interface TypedFetchOptions<T = any> extends UseFetchOptions {
+interface TypedFetchOptions extends UseFetchOptions {
   // Add any additional typed options here
 }
 
-// Type-safe fetch result
+// Type-safe fetch result (afterFetch unwraps ApiResponse<T> to T)
 type FetchResult<T> = Promise<{
-  data: Ref<ApiResponse<T> | null>;
+  data: Ref<T | null>;
   error: Ref<any>;
   isFetching: Ref<boolean>;
   canAbort: Ref<boolean>;
@@ -53,25 +53,25 @@ class Fetch {
     });
   }
 
-  get<T = any>({ url, params }: FetchParams, fetchOptions?: TypedFetchOptions<T>) {
+  get<T = any>({ url, params }: FetchParams, fetchOptions?: TypedFetchOptions) {
     const paramStr = typeof params === 'string' ? `?${params}` : params ? object2Search(params) : '';
-    return this.instance(`${url}${paramStr}`, fetchOptions || {}).json<ApiResponse<T>>();
+    return this.instance(`${url}${paramStr}`, fetchOptions || {}).json<T>();
   }
 
-  post<T = any>({ url, params }: FetchParams, fetchOptions?: TypedFetchOptions<T>) {
-    return this.instance(url, fetchOptions || {}).post(params).json<ApiResponse<T>>();
+  post<T = any>({ url, params }: FetchParams, fetchOptions?: TypedFetchOptions) {
+    return this.instance(url, fetchOptions || {}).post(params).json<T>();
   }
 
-  put<T = any>({ url, params }: FetchParams, fetchOptions?: TypedFetchOptions<T>) {
-    return this.instance(url, fetchOptions || {}).put(params).json<ApiResponse<T>>();
+  put<T = any>({ url, params }: FetchParams, fetchOptions?: TypedFetchOptions) {
+    return this.instance(url, fetchOptions || {}).put(params).json<T>();
   }
 
-  patch<T = any>({ url, params }: FetchParams, fetchOptions?: TypedFetchOptions<T>) {
-    return this.instance(url, fetchOptions || {}).patch(params).json<ApiResponse<T>>();
+  patch<T = any>({ url, params }: FetchParams, fetchOptions?: TypedFetchOptions) {
+    return this.instance(url, fetchOptions || {}).patch(params).json<T>();
   }
 
-  delete<T = any>({ url }: Pick<FetchParams, 'url'>, fetchOptions?: TypedFetchOptions<T>) {
-    return this.instance(url, fetchOptions || {}).delete().json<ApiResponse<T>>();
+  delete<T = any>({ url }: Pick<FetchParams, 'url'>, fetchOptions?: TypedFetchOptions) {
+    return this.instance(url, fetchOptions || {}).delete().json<T>();
   }
 }
 
@@ -94,7 +94,7 @@ const fetchInstance = new Fetch({
     },
   });
 
-const useMyFetch = <T = any>({ url, params, method = 'get' }: FetchParams, fetchOptions?: TypedFetchOptions<T>) => {
+const useMyFetch = <T = any>({ url, params, method = 'get' }: FetchParams, fetchOptions?: TypedFetchOptions) => {
   const methodName = method.toLowerCase() as keyof Fetch;
   
   if (methodName === 'delete') {

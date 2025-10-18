@@ -14,6 +14,18 @@
     <el-form-item label="描述" prop="desc">
       <el-input v-model="ruleForm.desc" type="textarea" />
     </el-form-item>
+    <el-form-item label="工作原理" prop="workingPrinciple">
+      <el-input v-model="ruleForm.workingPrinciple" type="textarea" :rows="4" />
+    </el-form-item>
+    <el-form-item label="应用场景" prop="applicationScenes">
+      <div class="application-scenes">
+        <div v-for="(scene, index) in ruleForm.applicationScenes" :key="index" class="scene-item">
+          <el-input v-model="ruleForm.applicationScenes[index]" placeholder="输入应用场景" />
+          <el-button type="danger" @click="removeScene(index)" style="margin-left: 8px;">删除</el-button>
+        </div>
+        <el-button type="primary" @click="addScene">添加场景</el-button>
+      </div>
+    </el-form-item>
     <el-form-item label="产地" prop="region">
       <el-input v-model="ruleForm.region" />
     </el-form-item>
@@ -178,6 +190,8 @@ const ruleForm = reactive<RuleForm>({
   region: '',
   typeId: '',
   desc: '',
+  workingPrinciple: '',
+  applicationScenes: [],
   features: [],
   models: [],
   images: [],
@@ -312,6 +326,14 @@ const resetForm = (formEl: FormInstance | undefined) => {
   formEl.resetFields()
 }
 
+const addScene = () => {
+  ruleForm.applicationScenes.push('');
+}
+
+const removeScene = (index: number) => {
+  ruleForm.applicationScenes.splice(index, 1);
+}
+
 const defaultProps = {
   children: 'children',
   label: 'name',
@@ -353,5 +375,13 @@ const defaultProps = {
     display: flex;
     flex-direction: column;
     width: 100%;
+  }
+  .application-scenes .scene-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .application-scenes .scene-item .el-input {
+    flex: 1;
   }
 </style>

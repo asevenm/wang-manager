@@ -44,6 +44,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { serviceCategoryApi, type ServiceCategory } from '@/service/service'
+import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
@@ -80,12 +81,11 @@ const saveCategory = async () => {
     } else {
       await serviceCategoryApi.create(currentCategory)
     }
-    
-    alert('保存成功')
+    ElMessage.success('保存成功')
     goBack()
   } catch (error) {
     console.error('Failed to save category:', error)
-    alert('保存失败')
+    ElMessage.error('保存失败')
   } finally {
     saving.value = false
   }

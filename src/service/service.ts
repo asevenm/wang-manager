@@ -41,7 +41,7 @@ export const serviceCategoryApi = {
       method: 'get'
     });
     return {
-      data: result.data.value?.data || []
+      data: result.data.value || []
     };
   },
 
@@ -51,7 +51,7 @@ export const serviceCategoryApi = {
       method: 'get'
     });
     return {
-      data: result.data.value?.data || {} as ServiceCategory
+      data: (result.data.value as ServiceCategory) || ({} as ServiceCategory)
     };
   },
 
@@ -84,7 +84,7 @@ export const serviceApi = {
       method: 'get'
     });
     return {
-      data: result.data.value?.data || []
+      data: (result.data.value as ServiceItem[]) || []
     };
   },
 
@@ -94,7 +94,7 @@ export const serviceApi = {
       method: 'get'
     });
     return {
-      data: result.data.value?.data || []
+      data: (result.data.value as ServiceItem[]) || []
     };
   },
 
@@ -104,7 +104,7 @@ export const serviceApi = {
       method: 'get'
     });
     return {
-      data: result.data.value?.data || {} as ServiceItem
+      data: (result.data.value as ServiceItem) || ({} as ServiceItem)
     };
   },
 

@@ -18,7 +18,7 @@ export const useCompanyApi = () => {
       method: 'get' 
     });
     return {
-      data: result.data.value?.data || {} as Company
+      data: (result.data.value as Company) || ({} as Company)
     };
   };
 

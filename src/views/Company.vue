@@ -117,7 +117,7 @@ onMounted(() => {
         <ElFormItem label="微信二维码">
           <ElUpload
             v-model:file-list="fileList"
-            class="upload-demo"
+            :class="['upload-demo', { 'show-uploader': fileList.length === 0, 'hide-uploader': fileList.length > 0 }]"
             drag
             :auto-upload="false"
             :on-change="handleFileChange"
@@ -126,7 +126,7 @@ onMounted(() => {
             accept="image/*"
             list-type="picture"
           >
-            <div class="upload-content">
+            <div v-if="fileList.length === 0" class="upload-content">
               <el-icon class="upload-icon"><upload-filled /></el-icon>
               <div class="upload-text">点击或拖拽文件到此处上传</div>
               <div class="upload-tip">支持 jpg、png、gif 格式，文件大小不超过 2MB</div>
@@ -202,7 +202,7 @@ onMounted(() => {
   color: #909399;
 }
 
-:deep(.el-upload-dragger) {
+:deep(.show-uploader .el-upload-dragger) {
   border: 2px dashed #d9d9d9;
   border-radius: 6px;
   width: 100%;
@@ -210,7 +210,10 @@ onMounted(() => {
   padding: 0;
 }
 
-:deep(.el-upload-dragger:hover) {
+:deep(.show-uploader .el-upload-dragger:hover) {
   border-color: #409eff;
+}
+:deep(.hide-uploader .el-upload-dragger) {
+  display: none;
 }
 </style>
