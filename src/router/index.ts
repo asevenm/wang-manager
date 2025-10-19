@@ -106,6 +106,21 @@ const router = createRouter({
       name: 'company',
       component: () => import('../views/Company.vue'),
     },
+    {
+      path: '/articles',
+      name: 'articles',
+      component: () => import('../views/Article.vue'),
+    },
+    {
+      path: '/articles/add',
+      name: 'article-add',
+      component: () => import('../views/ArticleEdit.vue')
+    },
+    {
+      path: '/articles/edit/:id',
+      name: 'article-edit',
+      component: () => import('../views/ArticleEdit.vue')
+    },
   ]
 })
 
