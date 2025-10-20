@@ -92,7 +92,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button size="small" @click="handleView(row)">查看</el-button>
             <el-button size="small" type="warning" @click="handleEdit(row)">编辑</el-button>
@@ -111,8 +111,8 @@
       <!-- 分页 -->
       <div class="pagination-wrapper">
         <el-pagination
-          v-model:current-page="queryForm.page"
-          v-model:page-size="queryForm.limit"
+          :current-page="queryForm.page"
+          :page-size="queryForm.limit"
           :page-sizes="[10, 20, 50, 100]"
           :total="total"
           layout="total, sizes, prev, pager, next, jumper"
