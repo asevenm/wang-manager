@@ -38,10 +38,15 @@ const handleSubmit = async () => {
   uploading.value = true;
   const formDataToSend = new FormData();
   
-  formDataToSend.append('address', formData.value.address || '');
-  formDataToSend.append('phone', formData.value.phone || '');
-  formDataToSend.append('email', formData.value.email || '');
-  
+  if (formData.value.address) {
+    formDataToSend.append('address', formData.value.address);
+  }
+  if (formData.value.phone) {
+    formDataToSend.append('phone', formData.value.phone);
+  }
+  if (formData.value.email) {
+    formDataToSend.append('email', formData.value.email);
+  }
   if (fileList.value.length > 0 && fileList.value[0].raw) {
     formDataToSend.append('wechatQrCodeFile', fileList.value[0].raw);
   }
@@ -116,7 +121,7 @@ onMounted(() => {
         
         <ElFormItem label="微信二维码">
           <ElUpload
-            v-model:file-list="fileList"
+            :file-list="fileList"
             :class="['upload-demo', { 'show-uploader': fileList.length === 0, 'hide-uploader': fileList.length > 0 }]"
             drag
             :auto-upload="false"
