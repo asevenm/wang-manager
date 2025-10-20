@@ -219,9 +219,10 @@ const saveService = async () => {
   try {
     saving.value = true
     
+    const { id, ...rest } = currentService
     // 准备保存的数据
     const serviceData = {
-      ...currentService,
+      ...rest,
       images: currentService.images?.map((img: ServiceImage) => ({
         url: img.url,
         description: img.description
@@ -229,7 +230,7 @@ const saveService = async () => {
     }
 
     if (isEdit.value) {
-      await serviceApi.update(currentService.id!, serviceData)
+      await serviceApi.update(id!, serviceData)
     } else {
       await serviceApi.create(serviceData)
     }

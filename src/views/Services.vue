@@ -87,7 +87,7 @@ const loadCategories = async () => {
 const loadServices = async () => {
   try {
     const response = await serviceApi.getAll()
-    services.value = response.data.data || []
+    services.value = response.data || []
   } catch (error) {
     console.error('Failed to load services:', error)
     services.value = []

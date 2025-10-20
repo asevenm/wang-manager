@@ -36,22 +36,22 @@ export interface ServiceImage {
 // 服务大类API
 export const serviceCategoryApi = {
   async getAll(): Promise<{ data: ServiceCategory[] }> {
-    const result = await useMyFetch<ServiceCategory[]>({ 
+    const result = await useMyFetch<{ data: ServiceCategory[] }>({
       url: '/service-categories/admin',
       method: 'get'
     });
     return {
-      data: result.data.value || []
+      data: (result.data.value as ServiceCategory[]) || []
     };
   },
 
   async getOne(id: number): Promise<{ data: ServiceCategory }> {
-    const result = await useMyFetch<ServiceCategory>({
+    const result = await useMyFetch<{ data: ServiceCategory }>({
       url: `/service-categories/${id}`,
       method: 'get'
     });
     return {
-      data: (result.data.value as ServiceCategory) || ({} as ServiceCategory)
+      data: (result.data.value?.data as ServiceCategory) || ({} as ServiceCategory)
     };
   },
 
@@ -79,32 +79,32 @@ export const serviceCategoryApi = {
 // 服务项目API
 export const serviceApi = {
   async getAll(): Promise<{ data: ServiceItem[] }> {
-    const result = await useMyFetch<ServiceItem[]>({ 
+    const result = await useMyFetch<{ data: ServiceItem[] }>({
       url: '/services/admin',
       method: 'get'
     });
     return {
-      data: (result.data.value as ServiceItem[]) || []
+      data: (result.data.value?.data as ServiceItem[]) || []
     };
   },
 
   async getByCategory(categoryId: number): Promise<{ data: ServiceItem[] }> {
-    const result = await useMyFetch<ServiceItem[]>({ 
+    const result = await useMyFetch<{ data: ServiceItem[] }>({
       url: `/service-categories/${categoryId}/services`,
       method: 'get'
     });
     return {
-      data: (result.data.value as ServiceItem[]) || []
+      data: (result.data.value?.data as ServiceItem[]) || []
     };
   },
 
   async getOne(id: number): Promise<{ data: ServiceItem }> {
-    const result = await useMyFetch<ServiceItem>({
+    const result = await useMyFetch<{ data: ServiceItem }>({
       url: `/services/${id}`,
       method: 'get'
     });
     return {
-      data: (result.data.value as ServiceItem) || ({} as ServiceItem)
+      data: (result.data.value?.data as ServiceItem) || ({} as ServiceItem)
     };
   },
 
