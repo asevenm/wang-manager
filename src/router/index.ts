@@ -121,6 +121,16 @@ const router = createRouter({
       name: 'article-edit',
       component: () => import('../views/ArticleEdit.vue')
     },
+    {
+      path: '/rental/products',
+      name: 'rental-products',
+      component: () => import('../views/RentalProducts.vue')
+    },
+    {
+      path: '/rental/notices',
+      name: 'rental-notices',
+      component: () => import('../views/RentalNotices.vue')
+    },
   ]
 })
 

@@ -21,6 +21,11 @@
     <el-menu-item index="/message">客户留言</el-menu-item>
     <el-menu-item index="/services">服务项目</el-menu-item>
     <el-menu-item index="/articles">文章管理</el-menu-item>
+    <el-sub-menu index="/rental">
+      <template #title>租赁管理</template>
+      <el-menu-item index="/rental/products">租赁产品</el-menu-item>
+      <el-menu-item index="/rental/notices">租赁须知</el-menu-item>
+    </el-sub-menu>
     <el-menu-item index="/company">公司信息</el-menu-item>
   </el-menu>
 </template>
