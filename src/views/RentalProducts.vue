@@ -2,9 +2,33 @@
 import { ref, onMounted } from 'vue';
 import { rentalApi } from '../service/rental';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import RichTextEditor from '../components/RichTextEditor.vue';
+
+// 固定的须知标题
+const NOTICE_KEYS = [
+  { key: 'deposit', title: '关于押金' },
+  { key: 'service', title: '服务内容' },
+  { key: 'rental_period', title: '关于租期' },
+  { key: 'delivery', title: '货物取送' },
+  { key: 'renewal', title: '关于续租' },
+  { key: 'refund', title: '租金退换' },
+  { key: 'quality', title: '质量保证' },
+  { key: 'early_return', title: '提前归还' },
+  { key: 'cancel', title: '取消订单' },
+];
 
 const products = ref<any[]>([]);
 const loading = ref(false);
+const expandedProductId = ref<number | null>(null);
+
+// 初始化空的须知对象
+const createEmptyNotices = () => {
+  const notices: Record<string, string> = {};
+  NOTICE_KEYS.forEach(item => {
+    notices[item.key] = '';
+  });
+  return notices;
+};
 
 const fetchProducts = async () => {
   loading.value = true;
@@ -19,6 +43,10 @@ const fetchProducts = async () => {
 
 const handleSave = async (row: any) => {
   try {
+    // 确保 notices 字段存在
+    if (!row.notices) {
+      row.notices = createEmptyNotices();
+    }
     if (row.id) {
       await rentalApi.updateProduct(row.id, row);
       ElMessage.success('更新成功');
@@ -43,6 +71,7 @@ const handleAdd = () => {
     deposit: 0,
     status: 'available',
     remarks: '',
+    notices: createEmptyNotices(),
     isEditing: true
   });
 };
@@ -65,6 +94,29 @@ const handleDelete = (row: any, index: number) => {
   });
 };
 
+// 展开/收起须知编辑
+const toggleNotices = (row: any) => {
+  if (expandedProductId.value === row.id) {
+    expandedProductId.value = null;
+  } else {
+    // 确保 notices 对象存在
+    if (!row.notices) {
+      row.notices = createEmptyNotices();
+    }
+    expandedProductId.value = row.id;
+  }
+};
+
+// 保存须知
+const handleSaveNotices = async (row: any) => {
+  try {
+    await rentalApi.updateProduct(row.id, { notices: row.notices });
+    ElMessage.success('须知保存成功');
+  } catch (error) {
+    ElMessage.error('须知保存失败');
+  }
+};
+
 onMounted(fetchProducts);
 </script>
 
@@ -75,7 +127,7 @@ onMounted(fetchProducts);
       <el-button type="primary" @click="handleAdd">添加产品</el-button>
     </div>
 
-    <el-table :data="products" v-loading="loading" style="width: 100%">
+    <el-table :data="products" v-loading="loading" style="width: 100%" row-key="id">
       <el-table-column label="产品名称" min-width="150">
         <template #default="{ row }">
           <el-input v-if="row.isEditing" v-model="row.name" placeholder="请输入名称" />
@@ -97,7 +149,7 @@ onMounted(fetchProducts);
       <el-table-column label="第三天" width="100">
         <template #default="{ row }">
           <el-input-number v-if="row.isEditing" v-model="row.day3_price" :precision="2" :step="0.1" :controls="false" />
-          <span v-else>{{ row.day1_price }}</span>
+          <span v-else>{{ row.day3_price }}</span>
         </template>
       </el-table-column>
       <el-table-column label="第四天" width="100">
@@ -123,13 +175,13 @@ onMounted(fetchProducts);
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="备注">
+      <el-table-column label="备注" min-width="120">
         <template #default="{ row }">
           <el-input v-if="row.isEditing" v-model="row.remarks" type="textarea" autosize />
           <span v-else>{{ row.remarks }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="150" fixed="right">
+      <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row, $index }">
           <template v-if="row.isEditing">
             <el-button link type="primary" @click="handleSave(row)">保存</el-button>
@@ -137,11 +189,41 @@ onMounted(fetchProducts);
           </template>
           <template v-else>
             <el-button link type="primary" @click="row.isEditing = true">编辑</el-button>
+            <el-button link type="primary" @click="toggleNotices(row)">
+              {{ expandedProductId === row.id ? '收起须知' : '编辑须知' }}
+            </el-button>
             <el-button link type="danger" @click="handleDelete(row, $index)">删除</el-button>
           </template>
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- 须知编辑区域 -->
+    <template v-for="product in products" :key="'notices-' + product.id">
+      <div v-if="expandedProductId === product.id && product.id" class="notices-panel">
+        <div class="notices-header">
+          <h3>{{ product.name }} - 租赁须知</h3>
+          <div>
+            <el-button type="primary" @click="handleSaveNotices(product)">保存须知</el-button>
+            <el-button @click="expandedProductId = null">收起</el-button>
+          </div>
+        </div>
+        <el-collapse>
+          <el-collapse-item
+            v-for="notice in NOTICE_KEYS"
+            :key="notice.key"
+            :title="notice.title"
+            :name="notice.key"
+          >
+            <RichTextEditor
+              v-model="product.notices[notice.key]"
+              height="200px"
+              :placeholder="`请输入${notice.title}的内容...`"
+            />
+          </el-collapse-item>
+        </el-collapse>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -151,5 +233,37 @@ onMounted(fetchProducts);
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+}
+
+.notices-panel {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #e4e7ed;
+}
+
+.notices-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.notices-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #303133;
+}
+
+:deep(.el-collapse-item__header) {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+:deep(.el-collapse-item__content) {
+  padding: 16px 0;
 }
 </style>
