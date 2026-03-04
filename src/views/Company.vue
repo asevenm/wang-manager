@@ -1,7 +1,20 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { ElForm, ElFormItem, ElInput, ElButton, ElUpload, ElMessage, type UploadProps } from 'element-plus';
+import {
+  ElForm,
+  ElFormItem,
+  ElInput,
+  ElButton,
+  ElUpload,
+  ElMessage,
+  type UploadProps,
+  type UploadUserFile,
+} from 'element-plus';
 import { useCompanyApi, type Company } from '../service/company';
+
+defineOptions({
+  name: 'CompanyPage',
+});
 
 const formData = ref<Company>({
   address: '',
@@ -10,20 +23,43 @@ const formData = ref<Company>({
   wechatQrCode: '',
 });
 
-const fileList = ref([]);
+const fileList = ref<UploadUserFile[]>([]);
 const uploading = ref(false);
 const { getCompany, updateCompany } = useCompanyApi();
+
+const splitMultiValue = (value?: string) => {
+  if (!value) return [];
+  return value
+    .split(/[\n,，;；]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+const toMultiline = (value?: string) => splitMultiValue(value).join('\n');
+
+const extractFileNameFromUrl = (url?: string) => {
+  if (!url) return '';
+  const fullName = url.split('/').pop() || '';
+  return fullName.split('?')[0];
+};
 
 const loadCompanyInfo = async () => {
   try {
     const { data } = await getCompany();
     if (data) {
-      formData.value = data;
+      formData.value = {
+        ...data,
+        phone: toMultiline(data.phone),
+        email: toMultiline(data.email),
+      };
       if (data.wechatQrCode) {
-        fileList.value = [{
-          name: '微信二维码',
-          url: `/api/uploads/${data.wechatQrCode}`,
-        }];
+        fileList.value = splitMultiValue(data.wechatQrCode).map((fileName, index) => ({
+          uid: Date.now() + index,
+          name: fileName,
+          url: `/api/uploads/${fileName}`,
+        }));
+      } else {
+        fileList.value = [];
       }
     }
   } catch (error) {
@@ -47,8 +83,26 @@ const handleSubmit = async () => {
   if (formData.value.email) {
     formDataToSend.append('email', formData.value.email);
   }
-  if (fileList.value.length > 0 && fileList.value[0].raw) {
-    formDataToSend.append('wechatQrCodeFile', fileList.value[0].raw);
+
+  const existingWechatQrCodes = fileList.value
+    .filter((file) => !file.raw && !!file.url)
+    .map((file) => extractFileNameFromUrl(file.url))
+    .filter(Boolean);
+
+  if (existingWechatQrCodes.length > 0) {
+    formDataToSend.append('existingWechatQrCodes', existingWechatQrCodes.join(','));
+  }
+
+  const newWechatFiles = fileList.value
+    .filter((file) => !!file.raw)
+    .map((file) => file.raw as File);
+
+  newWechatFiles.forEach((file) => {
+    formDataToSend.append('wechatQrCodeFiles', file);
+  });
+
+  if (newWechatFiles.length === 0 && existingWechatQrCodes.length === 0) {
+    formDataToSend.append('wechatQrCode', '');
   }
   
   try {
@@ -61,10 +115,6 @@ const handleSubmit = async () => {
   } finally {
     uploading.value = false;
   }
-};
-
-const handleFileChange: UploadProps['onChange'] = (uploadFile) => {
-  fileList.value = [uploadFile];
 };
 
 const beforeUpload: UploadProps['beforeUpload'] = (file) => {
@@ -108,32 +158,35 @@ onMounted(() => {
         <ElFormItem label="联系电话">
           <ElInput
             v-model="formData.phone"
-            placeholder="请输入联系电话"
+            placeholder="请输入联系电话，多个请换行"
+            type="textarea"
+            :rows="3"
           />
         </ElFormItem>
         
         <ElFormItem label="电子邮箱">
           <ElInput
             v-model="formData.email"
-            placeholder="请输入电子邮箱"
+            placeholder="请输入电子邮箱，多个请换行"
+            type="textarea"
+            :rows="3"
           />
         </ElFormItem>
         
         <ElFormItem label="微信二维码">
           <ElUpload
-            :file-list="fileList"
-            :class="['upload-demo', { 'show-uploader': fileList.length === 0, 'hide-uploader': fileList.length > 0 }]"
+            v-model:file-list="fileList"
+            class="upload-demo"
             drag
             :auto-upload="false"
-            :on-change="handleFileChange"
             :before-upload="beforeUpload"
-            :limit="1"
+            multiple
             accept="image/*"
             list-type="picture"
           >
-            <div v-if="fileList.length === 0" class="upload-content">
+            <div class="upload-content">
               <el-icon class="upload-icon"><upload-filled /></el-icon>
-              <div class="upload-text">点击或拖拽文件到此处上传</div>
+              <div class="upload-text">点击或拖拽文件到此处上传（支持多张）</div>
               <div class="upload-tip">支持 jpg、png、gif 格式，文件大小不超过 2MB</div>
             </div>
           </ElUpload>
@@ -207,7 +260,7 @@ onMounted(() => {
   color: #909399;
 }
 
-:deep(.show-uploader .el-upload-dragger) {
+:deep(.upload-demo .el-upload-dragger) {
   border: 2px dashed #d9d9d9;
   border-radius: 6px;
   width: 100%;
@@ -215,10 +268,7 @@ onMounted(() => {
   padding: 0;
 }
 
-:deep(.show-uploader .el-upload-dragger:hover) {
+:deep(.upload-demo .el-upload-dragger:hover) {
   border-color: #409eff;
-}
-:deep(.hide-uploader .el-upload-dragger) {
-  display: none;
 }
 </style>
